@@ -87,8 +87,8 @@ def superior_SMSprocess(From, Body):
 def reminder_SMS(command):
     week_day = datetime.datetime.today().weekday()
     employee_dict = {y:x for x,y in getEmployeeDict().items()}
-    account_sid = "ACfd3f5425de42d8f4c28004b23af8045c"
-    auth_token = "37fd8c602eb60a1fb3b7854848056909"
+    account_sid = ""
+    auth_token = ""
     client = Client(account_sid, auth_token)
     client_gsheets = signinGSheets()
     spread = client_gsheets.open('Insealation Employee Time Clock (' + strftime("%Y", gmtime()) + ')')
@@ -111,12 +111,12 @@ def reminder_SMS(command):
                     print(employee_dict.get(person))
                     client.api.account.messages.create(
                         to = employee_dict.get(person),
-                        from_ = "+14694143676",
+                        from_ = "",
                         body = 'This is a reminder that you have not clocked in today.')
                 if command == 'time out':
                     client.api.account.messages.create(
                         to = employee_dict.get(person),
-                        from_ = "+14694143676",
+                        from_ = "",
                         body = "This is a reminder that you have not clocked out today. Also be sure to send your stroke count if you have not")
 
 # responds to sender to state if message worked or if error occured
@@ -127,12 +127,12 @@ def error_SMS(sender, error):
         mesg = 'Given name was not found.'
     if error == 'success':
         mesg = 'Time clock entry was sucecssful.'
-    account_sid = "ACfd3f5425de42d8f4c28004b23af8045c"
-    auth_token = "37fd8c602eb60a1fb3b7854848056909"
+    account_sid = ""
+    auth_token = ""
     client = Client(account_sid, auth_token)
     client.api.account.messages.create(
         to = sender,
-        from_ = "+14694143676",
+        from_ = "",
         body = mesg)
 
 # sends stored messages to Superior
@@ -143,13 +143,13 @@ def send_stored_mesg():
     for i in range(0, len(messages), 1):
         text = text + '\n\n' + messages[i]
     print(text)
-    account_sid = "ACfd3f5425de42d8f4c28004b23af8045c"
-    auth_token = "37fd8c602eb60a1fb3b7854848056909"
+    account_sid = ""
+    auth_token = ""
     client = Client(account_sid, auth_token)
     if len(messages) > 0:
         client.api.account.messages.create(
-            to = "+19032290832",
-            from_ = "+14694143676",
+            to = "",
+            from_ = "",
             body = text)
 
 
@@ -158,8 +158,8 @@ def send_stored_mesg():
 
 # retrieves and returns dictionary of employees and their numbers
 def getEmployeeDict():
-    account_sid = "ACfd3f5425de42d8f4c28004b23af8045c"
-    auth_token = "37fd8c602eb60a1fb3b7854848056909"
+    account_sid = ""
+    auth_token = ""
     client = Client(account_sid, auth_token)
     verified_numbers = {}
     for caller_id in client.outgoing_caller_ids.list():
@@ -168,8 +168,8 @@ def getEmployeeDict():
 
 # retrieves and returns list of employee names
 def getEmployeeList():
-    account_sid = "ACfd3f5425de42d8f4c28004b23af8045c"
-    auth_token = "37fd8c602eb60a1fb3b7854848056909"
+    account_sid = ""
+    auth_token = ""
     client = Client(account_sid, auth_token)
     employee_list = []
     for caller_id in client.outgoing_caller_ids.list():
