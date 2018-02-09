@@ -91,8 +91,8 @@ def reminder_SMS(command):
     auth_token = "37fd8c602eb60a1fb3b7854848056909"
     client = Client(account_sid, auth_token)
     client_gsheets = signinGSheets()
-    book = client_gsheets.open('Elite Time Clock (' + strftime("%Y", gmtime()) + ')')
-    sh = get_sheet(book)
+    spread = client_gsheets.open('Elite Time Clock (' + strftime("%Y", gmtime()) + ')')
+    sh = spread.get_worksheet(0)
     if command == 'time in':
         col = 3
     if command == 'time out':
@@ -122,7 +122,7 @@ def reminder_SMS(command):
 # responds to sender to state if message worked or if error occured
 def error_SMS(sender, error):
     if error == 'addToSheets fail':
-        mesg = 'Time clock entry failed. Please send message in one of the following formats:\n"7:30 clock in"\n"720 trailer A 92301243"\n\nIf the message is for someone else you have to put their name at the start.'
+        mesg = 'Time clock entry failed. Please send message in one of the following formats:\n"John Smith 7:30 clock in"\n"John Smith 720 trailer A 92301243"\n\nIf the message is for yourself you do not have to include a name.'
     if error == 'name':
         mesg = 'Given name was not found.'
     if error == 'success':
@@ -215,8 +215,8 @@ def signinGSheets():
 def addToSheets(person, action, target, target2, target3):
     client = signinGSheets()
     employee_list = getEmployeeList()
-    book = client.open('Elite Time Clock (' + strftime("%Y", gmtime()) + ')')
-    sh = get_sheet(book)
+    spread = client.open('Elite Time Clock (' + strftime("%Y", gmtime()) + ')')
+    sh = spread.get_worksheet(0)
     cells = sh.findall(person)
     if action == 'time':                                # time action
         for i in range(0, len(cells), 1):
@@ -231,20 +231,20 @@ def addToSheets(person, action, target, target2, target3):
                         target = target + 'PM'
                     elif int(target[:-3]) >= 11:
                         target = target + 'PM?'
-                week_day = int(strftime("%w", gmtime()))
-                if week_day == 4:
-                    input_row = cells[i].row + 2
-                if week_day == 5:
-                    input_row = cells[i].row + 3
-                if week_day == 6:
-                    input_row = cells[i].row + 4
-                if week_day == 0:
-                    input_row = cells[i].row + 5
-                if week_day == 1:
-                    input_row = cells[i].row + 6
-                if week_day == 2:
-                    input_row = cells[i].row + 7
+                week_day = datetime.datetime.today().weekday()
                 if week_day == 3:
+                    input_row = cells[i].row + 2
+                if week_day == 4:
+                    input_row = cells[i].row + 3
+                if week_day == 5:
+                    input_row = cells[i].row + 4
+                if week_day == 6:
+                    input_row = cells[i].row + 5
+                if week_day == 0:
+                    input_row = cells[i].row + 6
+                if week_day == 1:
+                    input_row = cells[i].row + 7
+                if week_day == 2:
                     input_row = cells[i].row + 9
         sh.update_cell(input_row, input_col, target)
     if action == 'stroke':                              # stroke count action
@@ -267,22 +267,19 @@ def addToSheets(person, action, target, target2, target3):
                                 break
                 sets = sh.findall(target2)
                 input_row = sets[0].row
-                if not sh.cell(input_row, input_col).value == '':
-                    old_target = sh.cell(input_row, input_col).value
-                else:
-                    old_target = 0
-                cell_input = int(old_target) + int(target)
+                old_target = int(sh.cell(input_row, input_col).value)
+                cell_input = old_target + int(target)
                 sh.update_cell(input_row, input_col, cell_input)
 
 # creates new weekly time clock worksheet
 def newTimeSheet(date):
     client = signinGSheets()
     employee_list = getEmployeeList()
-    book = client.open('Elite Time Clock (' + strftime("%Y", gmtime()) + ')')
-    newsh = get_sheet(book)
+    sheet = client.open('Elite Time Clock (' + strftime("%Y", gmtime()) + ')')
+    newsh = sheet.get_worksheet(0)
     l = 9
     k = 11
-    for i in range(0, len(employee_list), 1):						    # enters names of all employees
+    for i in range(0, len(employee_list), 1):
         if employee_list[i].endswith("(employee)"):
             employee_list[i] = employee_list[i][:-10]
             newsh.update_acell('C' + str(l), employee_list[i])
@@ -291,24 +288,10 @@ def newTimeSheet(date):
             newsh.update_cell(23, k, employee_list[i])
             l = l + 16
             k = k +1
-    date = datetime.now()
-    starter_cell = 11
-    for i in range(0, 7 , 1):
-        starter_cell = starter_cell + (16*i)
-        for j in range(0, 7, 1):
-            input_row = starter_cell + j
-            input_date = date + timedelta(days=j)
-            newsh.update_cell(input_row, 1, str(input_date)[5:10])
 
-# returns sheet based on what day it is
-def get_sheet(book):
-   if int(strftime("%w", gmtime())) > 3 or int(strftime("%w", gmtime())) > 3:               # if day is Thu-Sun
-        sheet_number = int(strftime("%W", gmtime())) - 1
-   else: 										    # if day is Mon-Wed
-        sheet_number = int(strftime("%W", gmtime())) - 2 
-   sheet = book.get_worksheet(sheet_number)
-   return sheet
-
+# gets current worksheet to use
+def get_worksheet(book):
+    week_of_year = strftime("%W", gmtime())
 #-----------------------------------------------------------------------------------------------------------------------
 #-----------------------------------------MAIN ROUTE--------------------------------------------------------------------
 #-----------------------------------------------------------------------------------------------------------------------
